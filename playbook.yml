@@ -1,0 +1,16 @@
+- name: Install mysql
+  hosts: n5613-cicd-ansible
+  become: true
+
+  tasks:
+  - name: Install mysql
+    apt:
+      name: mysql-server
+      state: present
+
+- name: Install docker
+  hosts: n5613-cicd-ansible
+  roles:
+      - docker
+      vars:
+          - DBUSER

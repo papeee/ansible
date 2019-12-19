@@ -1,0 +1,50 @@
+- name: Create instance(s)
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    service_account_email: n5613-343@dev2ops.iam.gserviceaccount.com
+    # service_account_email: n5613-985@dev2ops.iam.gserviceaccount.com
+    # service_account_email: n5613-343@dev2ops.iam.gserviceaccount.com
+    credentials_file: home/pasi5613/ansible/secret/dev2ops-5563150341a6.json
+    project_id: dev2ops
+    machine_type: f1-micro
+    image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+    zone: europe-west4-a
+  tasks:
+    - name: Launch instances
+      gcp_compute_instance:
+        auth_kind: serviceaccount
+        name: n5613_ansible_created
+        machine_type: "{{ machine_type }}"
+        disks:
+          - auto_delete: true
+            boot: true
+            initialize_params:
+              source_image: "{{ image }}"
+        network_interfaces:
+          - access_configs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+        service_account_file: "{{ credentials_file }}"
+        project: "{{ project_id }}"
+        zone: "{{ zone }}"
+    - name: Refresh inventory
+      meta: refresh_inventory - name: Wait ssh up
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: wait
+      wait_for:
+        host: "{{ hostvars.localhost.groups['_n5613_ansible_created'][0] }}"
+        port: 22
+        timeout: 60
+        state: started 
+          - name: Install apache
+  hosts: _n5613_ansible_created
+  become: yes
+  tasks:
+    - name: install apache
+      apt:
+        name: apache2
+        state: present
